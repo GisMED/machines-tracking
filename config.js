@@ -13,6 +13,6 @@ var CONFIG = {
 
   // (٣) رابط صفحة المسح بعد نشرها على GitHub Pages
   //     مثال: https://USERNAME.github.io/REPO/scan.html
-  SCAN_URL: "SCAN_URL: "https://GisMED.github.io/machines-tracking/scan.html"
+  SCAN_URL: "https://GisMED.github.io/machines-tracking/scan.html"
 
 };
