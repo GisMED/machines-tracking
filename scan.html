@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>تحديث موقع المكينة</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@600&display=swap" rel="stylesheet">
+<style>
+  :root{--bg:#F6F5F1;--ink:#0E2A2B;--teal:#15605F;--amber:#F2A900;--ok:#1E8E5A;--err:#C0432F;--muted:#6B6F6E;--line:#E5E3DC;}
+  *{box-sizing:border-box}html,body{margin:0;height:100%}
+  body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,Tahoma,sans-serif;
+    display:flex;align-items:center;justify-content:center;min-height:100vh;padding:24px;-webkit-font-smoothing:antialiased;}
+  .card{background:#fff;border:1px solid var(--line);border-radius:20px;padding:34px 26px;max-width:380px;width:100%;text-align:center;
+    box-shadow:0 1px 2px rgba(14,42,43,.05),0 14px 40px rgba(14,42,43,.08);}
+  .icon{width:88px;height:88px;border-radius:50%;margin:0 auto 20px;display:flex;align-items:center;justify-content:center;}
+  .icon svg{width:44px;height:44px}
+  .icon.load{background:rgba(21,96,95,.1)}
+  .icon.ok{background:rgba(30,142,90,.12)}
+  .icon.err{background:rgba(192,67,47,.1)}
+  .spin{width:44px;height:44px;border:4px solid rgba(21,96,95,.2);border-top-color:var(--teal);border-radius:50%;animation:r .9s linear infinite}
+  @keyframes r{to{transform:rotate(360deg)}}
+  @media (prefers-reduced-motion:reduce){.spin{animation:none}}
+  h1{font-size:21px;font-weight:700;margin:0 0 8px}
+  .sn{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:17px;color:var(--teal);direction:ltr;margin:0 0 14px}
+  p.msg{font-size:14.5px;color:var(--muted);margin:0;line-height:1.6}
+  .retry{margin-top:22px;display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--teal);color:#fff;border:none;
+    border-radius:11px;padding:13px 22px;font-family:inherit;font-size:15px;font-weight:600;cursor:pointer;}
+  .retry:active{transform:translateY(1px)} .hidden{display:none}
+  .foot{margin-top:18px;font-size:12px;color:var(--muted)}
+</style>
+</head>
+<body>
+  <div class="card">
+    <div class="icon load" id="icon"><div class="spin"></div></div>
+    <h1 id="title">جارٍ التحديث…</h1>
+    <p class="sn" id="sn"></p>
+    <p class="msg" id="msg">يتم تحديد موقعك الحالي.</p>
+    <button class="retry hidden" id="retry" type="button">إعادة المحاولة</button>
+    <div class="foot" id="foot"></div>
+  </div>
+
+<script src="config.js"></script>
+<script>
+  var sn = new URLSearchParams(location.search).get("sn");
+  var $ = function(id){ return document.getElementById(id); };
+
+  function setIcon(kind){
+    var el = $("icon"); el.className = "icon " + kind;
+    if(kind==="load"){ el.innerHTML = '<div class="spin"></div>'; }
+    if(kind==="ok"){ el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#1E8E5A" stroke-width="2.6"><path d="M20 6L9 17l-5-5"/></svg>'; }
+    if(kind==="err"){ el.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="#C0432F" stroke-width="2.6"><path d="M18 6L6 18M6 6l12 12"/></svg>'; }
+  }
+  function show(kind, title, msg, retry){
+    setIcon(kind); $("title").textContent = title; $("msg").textContent = msg;
+    $("retry").classList.toggle("hidden", !retry);
+  }
+
+  function jsonp(params){
+    return new Promise(function(resolve, reject){
+      var cb = "cb_" + Math.random().toString(36).slice(2);
+      var s = document.createElement("script");
+      var timer = setTimeout(function(){ cleanup(); reject(new Error("timeout")); }, 15000);
+      function cleanup(){ clearTimeout(timer); try{ delete window[cb]; }catch(e){ window[cb]=undefined; } if(s.parentNode) s.parentNode.removeChild(s); }
+      window[cb] = function(data){ cleanup(); resolve(data); };
+      var qs = Object.keys(params).map(function(k){ return encodeURIComponent(k)+"="+encodeURIComponent(params[k]); }).join("&");
+      s.src = CONFIG.API_URL + "?" + qs + "&callback=" + cb;
+      s.onerror = function(){ cleanup(); reject(new Error("network")); };
+      document.head.appendChild(s);
+    });
+  }
+
+  function run(){
+    if(!CONFIG || !CONFIG.API_URL || CONFIG.API_URL.indexOf("http") !== 0){
+      show("err","النظام غير مُهيّأ","لم يتم ضبط رابط الخادم في ملف config.js.",false); return;
+    }
+    if(!sn){
+      show("err","رابط غير صالح","هذا الرابط لا يحتوي على رقم تسلسلي. تأكد من مسح الباركود الصحيح.",false); return;
+    }
+    $("sn").textContent = sn;
+    show("load","جارٍ التحديث…","يتم تحديد موقعك الحالي.",false);
+
+    if(!navigator.geolocation){
+      show("err","غير مدعوم","المتصفح لا يدعم تحديد الموقع.",true); return;
+    }
+    navigator.geolocation.getCurrentPosition(
+      function(pos){
+        $("msg").textContent = "تم تحديد الموقع، جارٍ الحفظ…";
+        jsonp({ action:"save", token:CONFIG.TOKEN, sn:sn,
+                lat:pos.coords.latitude.toFixed(6), lng:pos.coords.longitude.toFixed(6) })
+        .then(function(r){
+          if(r && r.ok){
+            show("ok","تم تحديث الموقع", "حُفظ موقع المكينة بنجاح. يمكنك إغلاق الصفحة.", false);
+            var acc = Math.round(pos.coords.accuracy||0);
+            $("foot").textContent = acc ? ("دقة الموقع ≈ " + acc + " متر") : "";
+          } else {
+            var er = (r && r.error) ? r.error : "خطأ غير معروف";
+            show("err","تعذّر الحفظ", er === "unauthorized" ? "كلمة المرور غير متطابقة (token)." : ("فشل الحفظ: " + er), true);
+          }
+        })
+        .catch(function(){ show("err","تعذّر الاتصال","لم نتمكن من الوصول للخادم. تحقق من الإنترنت ثم أعد المحاولة.",true); });
+      },
+      function(err){
+        var m = "تعذّر تحديد الموقع.";
+        if(err.code===1) m = "صلاحية الموقع مرفوضة. اسمح بالوصول للموقع من إعدادات المتصفح ثم أعد المحاولة.";
+        else if(err.code===3) m = "انتهت مهلة تحديد الموقع. تأكد أنك في مكان مفتوح وأعد المحاولة.";
+        show("err","الموقع غير متاح", m, true);
+      },
+      { enableHighAccuracy:true, timeout:12000, maximumAge:0 }
+    );
+  }
+
+  $("retry").addEventListener("click", run);
+  run();
+</script>
+</body>
+</html>

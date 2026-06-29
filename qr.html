@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>باركود المكائن</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrious/4.0.2/qrious.min.js"></script>
+<style>
+  :root{--bg:#F6F5F1;--card:#fff;--ink:#0E2A2B;--teal:#15605F;--teal-d:#0F4948;--amber:#F2A900;--line:#E5E3DC;--muted:#6B6F6E;--err:#C0432F;
+    --shadow:0 1px 2px rgba(14,42,43,.05),0 6px 18px rgba(14,42,43,.06);}
+  *{box-sizing:border-box}html,body{margin:0}
+  body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,Tahoma,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  .wrap{max-width:760px;margin:0 auto;padding:24px 16px 50px}
+  h1{font-size:20px;font-weight:700;margin:0 0 4px}
+  .sub{font-size:13px;color:var(--muted);margin:0 0 20px}
+  .bar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:20px}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--teal);color:#fff;border:none;
+    border-radius:11px;padding:12px 18px;font-family:inherit;font-size:14.5px;font-weight:600;cursor:pointer;transition:background .15s}
+  .btn:hover{background:var(--teal-d)}.btn svg{width:17px;height:17px}
+  .btn.sec{background:#fff;color:var(--teal);box-shadow:inset 0 0 0 1.5px var(--teal)} .btn.sec:hover{background:rgba(21,96,95,.06)}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px}
+  .cell{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px;text-align:center;box-shadow:var(--shadow)}
+  .cell img{width:100%;max-width:160px;aspect-ratio:1;image-rendering:pixelated;display:block;margin:0 auto 10px}
+  .cell .qn{font-family:"IBM Plex Mono",monospace;font-size:14px;font-weight:600;margin-bottom:10px;word-break:break-all}
+  .cell a.dl{display:inline-block;font-size:12.5px;color:var(--teal);font-weight:600;text-decoration:none;padding:5px 12px;border-radius:8px;box-shadow:inset 0 0 0 1.5px var(--line)}
+  .cell a.dl:hover{box-shadow:inset 0 0 0 1.5px var(--teal)}
+  .state{text-align:center;padding:46px 20px;color:var(--muted)}.state.error h3{color:var(--err)}
+  .state h3{color:var(--ink);font-size:16px;margin:0 0 6px}.state p{font-size:13.5px;margin:0}
+  @media print{
+    .bar,.sub{display:none}body{background:#fff}.wrap{max-width:none}
+    .cell a.dl{display:none}.grid{gap:22px}.cell{break-inside:avoid;border-color:#ccc}
+  }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>باركود المكائن</h1>
+  <p class="sub">كل باركود يفتح صفحة المسح حاملًا الرقم التسلسلي. اطبعها والصقها على المكائن.</p>
+  <div class="bar">
+    <button class="btn" id="printBtn" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9"><path d="M6 9V3h12v6M6 18H4v-7h16v7h-2M8 14h8v7H8z"/></svg>طباعة الكل</button>
+    <button class="btn sec" id="reload" type="button"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>إعادة التحميل</button>
+  </div>
+  <div id="grid"><div class="state"><p>جارٍ التحميل…</p></div></div>
+</div>
+
+<script src="config.js"></script>
+<script>
+  var $=function(id){return document.getElementById(id);};
+  function esc(s){return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];});}
+  function scanUrl(sn){ var b=(CONFIG.SCAN_URL||"").trim(); if(!b) return sn; return b+(b.indexOf("?")>-1?"&":"?")+"sn="+encodeURIComponent(sn); }
+
+  function jsonp(params){
+    return new Promise(function(resolve,reject){
+      var cb="cb_"+Math.random().toString(36).slice(2),s=document.createElement("script");
+      var timer=setTimeout(function(){cleanup();reject(new Error("timeout"));},15000);
+      function cleanup(){clearTimeout(timer);try{delete window[cb];}catch(e){window[cb]=undefined;}if(s.parentNode)s.parentNode.removeChild(s);}
+      window[cb]=function(d){cleanup();resolve(d);};
+      var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+"="+encodeURIComponent(params[k]);}).join("&");
+      s.src=CONFIG.API_URL+"?"+qs+"&callback="+cb; s.onerror=function(){cleanup();reject(new Error("network"));};
+      document.head.appendChild(s);
+    });
+  }
+
+  function stateErr(msg){ $("grid").innerHTML='<div class="state error"><h3>تعذّر التحميل</h3><p>'+esc(msg)+'</p></div>'; }
+
+  function render(items){
+    if(typeof QRious==="undefined"){ stateErr("تعذّر تحميل مولّد الباركود. تحقق من الإنترنت."); return; }
+    if(!items.length){ $("grid").innerHTML='<div class="state"><h3>لا توجد أرقام تسلسلية</h3><p>أضفها في جدول Google Sheet ثم أعد التحميل.</p></div>'; return; }
+    $("grid").innerHTML = items.map(function(m){
+      var url=""; try{ url=new QRious({value:scanUrl(m.serial),size:380,level:"M",background:"#ffffff",foreground:"#0E2A2B",padding:8}).toDataURL("image/png"); }catch(e){}
+      return '<div class="cell"><img src="'+url+'" alt="باركود '+esc(m.serial)+'"><div class="qn">'+esc(m.serial)+'</div><a class="dl" href="'+url+'" download="qr-'+esc(m.serial)+'.png">تحميل PNG</a></div>';
+    }).join("");
+  }
+
+  function load(){
+    if(!CONFIG||!CONFIG.API_URL||CONFIG.API_URL.indexOf("http")!==0){ stateErr("لم يُضبط رابط الخادم في config.js"); return; }
+    $("grid").innerHTML='<div class="state"><p>جارٍ التحميل…</p></div>';
+    jsonp({action:"list",token:CONFIG.TOKEN})
+      .then(function(r){ if(r&&r.ok&&Array.isArray(r.items)) render(r.items); else stateErr(r&&r.error==="unauthorized"?"كلمة المرور غير متطابقة (token).":((r&&r.error)||"استجابة غير متوقعة")); })
+      .catch(function(){ stateErr("تعذّر الوصول للخادم."); });
+  }
+
+  $("printBtn").addEventListener("click",function(){ window.print(); });
+  $("reload").addEventListener("click", load);
+  load();
+</script>
+</body>
+</html>
