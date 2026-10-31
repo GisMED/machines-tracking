@@ -1,117 +1,360 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>مواقع مكائن التعبئة</title>
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap" rel="stylesheet">
-<style>
-  :root{--bg:#F6F5F1;--card:#fff;--ink:#0E2A2B;--teal:#15605F;--teal-d:#0F4948;--amber:#F2A900;
-    --line:#E5E3DC;--muted:#6B6F6E;--has:#1E8E5A;--none:#9AA0A0;--err:#C0432F;
-    --shadow:0 1px 2px rgba(14,42,43,.05),0 6px 18px rgba(14,42,43,.06);}
-  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}html,body{margin:0}
-  body{background:var(--bg);color:var(--ink);font-family:"IBM Plex Sans Arabic",system-ui,Tahoma,sans-serif;
-    line-height:1.55;-webkit-font-smoothing:antialiased;min-height:100vh;}
-  .num{font-family:"IBM Plex Mono",ui-monospace,monospace;font-variant-numeric:tabular-nums;direction:ltr;unicode-bidi:isolate;}
-  .wrap{max-width:560px;margin:0 auto;padding:0 16px;}
-  header{position:sticky;top:0;z-index:10;background:rgba(246,245,241,.92);backdrop-filter:blur(10px);
-    border-bottom:1px solid var(--line);padding:calc(env(safe-area-inset-top) + 14px) 0 14px;}
-  .hrow{display:flex;align-items:center;gap:11px}
-  .mark{width:34px;height:34px;border-radius:9px;background:var(--teal);position:relative;flex:0 0 auto}
-  .mark::after{content:"";position:absolute;inset:0;margin:auto;width:9px;height:13px;background:var(--amber);border-radius:0 50% 50% 50%;transform:translateY(-1px) rotate(45deg)}
-  h1{font-size:17px;font-weight:700;margin:0}
-  .sub{font-size:12px;color:var(--muted);margin-top:1px}
-  .refresh{margin-inline-start:auto;background:#fff;border:1.5px solid var(--line);border-radius:10px;width:40px;height:40px;
-    display:flex;align-items:center;justify-content:center;cursor:pointer;color:var(--teal);flex:0 0 auto}
-  .refresh:hover{border-color:var(--teal)} .refresh svg{width:19px;height:19px}
-  .refresh.spinning svg{animation:r 1s linear infinite}@keyframes r{to{transform:rotate(360deg)}}
-  main{padding:18px 0 40px}
-  .card{background:var(--card);border:1px solid var(--line);border-radius:15px;padding:15px;margin-bottom:12px;box-shadow:var(--shadow)}
-  .row{display:flex;align-items:center;gap:10px}
-  .dot{width:10px;height:10px;border-radius:50%;flex:0 0 auto}.dot.has{background:var(--has)}.dot.none{background:var(--none)}
-  .sn{font-family:"IBM Plex Mono",monospace;font-weight:600;font-size:16px;letter-spacing:.3px}
-  .loc{font-size:13px;color:var(--muted);margin-top:6px}.loc.none{color:var(--none)}
-  .go{margin-inline-start:auto;display:inline-flex;align-items:center;gap:7px;background:var(--teal);color:#fff;border:none;
-    border-radius:999px;padding:10px 16px;font-family:inherit;font-size:14px;font-weight:600;cursor:pointer;transition:background .15s;flex:0 0 auto}
-  .go:hover{background:var(--teal-d)}.go:active{transform:translateY(1px)}.go svg{width:16px;height:16px}
-  .state{text-align:center;padding:50px 20px;color:var(--muted)}
-  .state .em{font-size:30px;margin-bottom:10px;opacity:.5}
-  .state h3{color:var(--ink);font-size:16px;margin:0 0 6px}.state p{font-size:13.5px;margin:0}
-  .state.error h3{color:var(--err)}
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>متتبع المكائن</title>
+    <!-- مكتبة الأيقونات -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- مكتبة توليد الباركود -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+    
+    <style>
+        :root {
+            --primary: #007bff;
+            --success: #28a745;
+            --warning: #ffc107;
+            --danger: #dc3545;
+            --bg: #f4f7f6;
+            --text: #333;
+            --border: #ddd;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        body { background-color: var(--bg); color: var(--text); padding-bottom: 70px; }
+        
+        /* الشريط العلوي */
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        
+        /* الحاويات */
+        .container { padding: 15px; max-width: 600px; margin: auto; }
+        .tab-content { display: none; }
+        .tab-content.active { display: block; animation: fadeIn 0.3s; }
+        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+        /* البطاقات */
+        .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .serial { font-weight: bold; font-size: 1.1rem; color: var(--primary); }
+        .date { font-size: 0.8rem; color: #777; }
+        
+        /* الأزرار */
+        .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; text-align: center; text-decoration: none; margin-top: 10px; transition: 0.2s; }
+        .btn-primary { background: var(--primary); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--danger); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
+        .btn:active { transform: scale(0.98); }
+
+        /* النماذج */
+        .form-group { margin-bottom: 15px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
+        input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; }
+        
+        /* شريط التبويبات السفلي */
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; border-top: 1px solid var(--border); z-index: 100; }
+        .nav-item { flex: 1; text-align: center; padding: 12px 5px; color: #777; cursor: pointer; font-size: 0.8rem; }
+        .nav-item i { font-size: 1.3rem; margin-bottom: 3px; display: block; }
+        .nav-item.active { color: var(--primary); font-weight: bold; }
+
+        /* الباركود */
+        #qrcode-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: white; border-radius: 10px; margin-top: 15px; }
+        #qrcode { margin: 15px 0; }
+        
+        /* رسائل التنبيه */
+        .alert { padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; text-align: center; }
+        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        
+        .loading { text-align: center; padding: 20px; color: #777; }
+    </style>
 </head>
 <body>
-<header>
-  <div class="wrap hrow">
-    <div class="mark" aria-hidden="true"></div>
-    <div><h1>مواقع مكائن التعبئة</h1><div class="sub" id="sub">جارٍ التحميل…</div></div>
-    <button class="refresh" id="refresh" type="button" title="تحديث">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 12a9 9 0 1 1-3-6.7L21 8M21 3v5h-5"/></svg>
-    </button>
-  </div>
-</header>
-<main class="wrap"><div id="list"><div class="state"><p>جارٍ التحميل…</p></div></div></main>
 
-<script src="config.js"></script>
-<script>
-  var $ = function(id){ return document.getElementById(id); };
-  function esc(s){ return String(s==null?"":s).replace(/[&<>"]/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c];}); }
-  function mapsLink(la,ln){ return "https://www.google.com/maps/dir/?api=1&destination="+la+","+ln; }
-  function openMaps(la,ln){ window.open(mapsLink(la,ln),"_blank","noopener"); }
+    <header>📍 متتبع مواقع المكائن</header>
 
-  function jsonp(params){
-    return new Promise(function(resolve,reject){
-      var cb="cb_"+Math.random().toString(36).slice(2), s=document.createElement("script");
-      var timer=setTimeout(function(){cleanup();reject(new Error("timeout"));},15000);
-      function cleanup(){clearTimeout(timer);try{delete window[cb];}catch(e){window[cb]=undefined;}if(s.parentNode)s.parentNode.removeChild(s);}
-      window[cb]=function(d){cleanup();resolve(d);};
-      var qs=Object.keys(params).map(function(k){return encodeURIComponent(k)+"="+encodeURIComponent(params[k]);}).join("&");
-      s.src=CONFIG.API_URL+"?"+qs+"&callback="+cb; s.onerror=function(){cleanup();reject(new Error("network"));};
-      document.head.appendChild(s);
-    });
-  }
+    <!-- رسائل التنبيه -->
+    <div class="container">
+        <div id="alert" class="alert"></div>
+    </div>
 
-  function render(items){
-    var n=items.length;
-    $("sub").textContent = n===0?"لا توجد مكائن":(n===1?"مكينة واحدة":n===2?"مكينتان":n<=10?n+" مكائن":n+" مكينة");
-    if(n===0){ $("list").innerHTML='<div class="state"><div class="em">⛽</div><h3>لا توجد مكائن بعد</h3><p>أضف الأرقام التسلسلية في جدول Google Sheet.</p></div>'; return; }
-    items.sort(function(a,b){ return (a.lat!=null?0:1)-(b.lat!=null?0:1); });
-    $("list").innerHTML = items.map(function(m){
-      var has = m.lat!=null && m.lng!=null;
-      return '<div class="card"><div class="row">'+
-        '<span class="dot '+(has?"has":"none")+'"></span>'+
-        '<span class="sn">'+esc(m.serial)+'</span>'+
-        (has?'<button class="go" onclick="openMaps('+(+m.lat)+','+(+m.lng)+')"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 21s-7-5.5-7-11a7 7 0 0 1 14 0c0 5.5-7 11-7 11z"/><circle cx="12" cy="10" r="2.5"/></svg>الذهاب</button>':'')+
-        '</div>'+
-        (has?'<div class="loc num">'+(+m.lat).toFixed(5)+', '+(+m.lng).toFixed(5)+'</div>':'<div class="loc none">لم يُحدَّد موقعها بعد</div>')+
-        '</div>';
-    }).join("");
-  }
+    <!-- ================== 1. تبويب اللوحة ================== -->
+    <div id="tab-dashboard" class="tab-content active container">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+            <h3>المواقع الحالية</h3>
+            <button onclick="loadDashboard()" class="btn btn-outline" style="width: auto; padding: 8px 15px; margin: 0;">
+                <i class="fas fa-sync-alt"></i> تحديث
+            </button>
+        </div>
+        <div id="dashboard-list">
+            <div class="loading">جاري تحميل البيانات...</div>
+        </div>
+    </div>
 
-  function showError(msg){
-    $("sub").textContent="تعذّر التحميل";
-    $("list").innerHTML='<div class="state error"><h3>تعذّر تحميل البيانات</h3><p>'+esc(msg)+'</p></div>';
-  }
+    <!-- ================== 2. تبويب تسجيل نقل ================== -->
+    <div id="tab-save" class="tab-content container">
+        <div class="card">
+            <h3 style="margin-bottom: 15px;">تسجيل موقع جديد</h3>
+            
+            <div class="form-group">
+                <label>اختر الماكينة (Serial)</label>
+                <select id="save-serial">
+                    <option value="">-- جاري التحميل --</option>
+                </select>
+            </div>
 
-  var loading=false;
-  function load(){
-    if(loading) return; loading=true;
-    $("refresh").classList.add("spinning");
-    if(!CONFIG||!CONFIG.API_URL||CONFIG.API_URL.indexOf("http")!==0){ showError("لم يُضبط رابط الخادم في config.js"); loading=false; $("refresh").classList.remove("spinning"); return; }
-    jsonp({action:"list",token:CONFIG.TOKEN})
-      .then(function(r){
-        if(r&&r.ok&&Array.isArray(r.items)) render(r.items);
-        else showError(r&&r.error==="unauthorized"?"كلمة المرور غير متطابقة (token).":((r&&r.error)||"استجابة غير متوقعة"));
-      })
-      .catch(function(){ showError("تعذّر الوصول للخادم. تحقق من الإنترنت ومن رابط النشر."); })
-      .then(function(){ loading=false; $("refresh").classList.remove("spinning"); });
-  }
+            <div class="form-group">
+                <label>الموقع الحالي (GPS)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="text" id="save-lat" placeholder="خط العرض (Lat)" readonly>
+                    <input type="text" id="save-lng" placeholder="خط الطول (Lng)" readonly>
+                </div>
+                <button onclick="captureLocation()" class="btn btn-outline" style="margin-top: 10px;">
+                    <i class="fas fa-map-marker-alt"></i> التقاط الموقع الحالي
+                </button>
+            </div>
 
-  $("refresh").addEventListener("click", load);
-  load();
-  setInterval(load, 30000);   // تحديث تلقائي كل ٣٠ ثانية
-</script>
+            <button onclick="saveMovement()" class="btn btn-success" style="margin-top: 20px;">
+                <i class="fas fa-save"></i> حفظ الموقع
+            </button>
+        </div>
+    </div>
+
+    <!-- ================== 3. تبويب الباركود ================== -->
+    <div id="tab-qr" class="tab-content container">
+        <div class="card">
+            <h3 style="margin-bottom: 15px;">توليد باركود (QR)</h3>
+            <div class="form-group">
+                <label>اختر الماكينة</label>
+                <select id="qr-serial" onchange="generateQR()">
+                    <option value="">-- جاري التحميل --</option>
+                </select>
+            </div>
+            
+            <div id="qrcode-container" style="display: none;">
+                <div id="qrcode"></div>
+                <p style="font-weight: bold; margin-top: 10px;" id="qr-label"></p>
+                <button onclick="window.print()" class="btn btn-primary" style="margin-top: 15px;">
+                    <i class="fas fa-print"></i> طباعة الباركود
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- ================== 4. تبويب الإعدادات ================== -->
+    <div id="tab-settings" class="tab-content container">
+        <div class="card">
+            <h3 style="margin-bottom: 15px;">معلومات الاتصال</h3>
+            <p style="font-size: 0.9rem; color: #555; margin-bottom: 15px;">
+                النظام متصل بقاعدة بيانات Google Sheets. أي تحديث هنا يظهر مباشرة للجميع.
+            </p>
+            <div class="form-group">
+                <label>اسمك (يظهر في سجل التحديثات)</label>
+                <input type="text" id="user-name" placeholder="اكتب اسمك هنا..." onchange="saveUserName()">
+            </div>
+        </div>
+    </div>
+
+    <!-- شريط التبويبات السفلي -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" onclick="switchTab('dashboard', this)">
+            <i class="fas fa-map-marked-alt"></i>
+            اللوحة
+        </div>
+        <div class="nav-item" onclick="switchTab('save', this)">
+            <i class="fas fa-edit"></i>
+            تسجيل نقل
+        </div>
+        <div class="nav-item" onclick="switchTab('qr', this)">
+            <i class="fas fa-qrcode"></i>
+            باركود
+        </div>
+        <div class="nav-item" onclick="switchTab('settings', this)">
+            <i class="fas fa-cog"></i>
+            الإعدادات
+        </div>
+    </nav>
+
+    <script>
+        // ⚠️ الرابط الخاص بك وكلمة السر
+        const API_URL = "https://script.google.com/macros/s/AKfycbxlcvniIVRKsl2vx3tLt6tHsKYXhO5-0YWiqifhZWfS95IFnI3vwx1uUzzFa3hPyiauWQ/exec";
+        const TOKEN = "12346789";
+
+        let allMachines = []; // لتخزين البيانات مؤقتاً
+        let qrCodeInstance = null;
+
+        // ================== التبويبات ==================
+        function switchTab(tabId, navElement) {
+            document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
+            
+            document.getElementById('tab-' + tabId).classList.add('active');
+            navElement.classList.add('active');
+        }
+
+        // ================== التنبيهات ==================
+        function showAlert(msg, type = 'success') {
+            const alertBox = document.getElementById('alert');
+            alertBox.textContent = msg;
+            alertBox.className = `alert alert-${type}`;
+            alertBox.style.display = 'block';
+            setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
+        }
+
+        // ================== تحميل البيانات ==================
+        async function loadDashboard() {
+            const listContainer = document.getElementById('dashboard-list');
+            listContainer.innerHTML = '<div class="loading">جاري تحميل البيانات...</div>';
+            
+            try {
+                const response = await fetch(`${API_URL}?token=${TOKEN}&action=list`);
+                const data = await response.json();
+
+                if (data.ok) {
+                    allMachines = data.items;
+                    renderDashboard();
+                    populateDropdowns();
+                } else {
+                    listContainer.innerHTML = `<div class="alert alert-error" style="display:block;">خطأ: ${data.error}</div>`;
+                }
+            } catch (error) {
+                listContainer.innerHTML = `<div class="alert alert-error" style="display:block;">فشل الاتصال بالخادم. تحقق من الإنترنت.</div>`;
+            }
+        }
+
+        function renderDashboard() {
+            const listContainer = document.getElementById('dashboard-list');
+            if (allMachines.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center;">لا توجد مكائن مسجلة.</p>';
+                return;
+            }
+
+            listContainer.innerHTML = allMachines.map(m => {
+                const dateStr = m.updated_at ? new Date(m.updated_at).toLocaleString('ar-SA') : 'غير محدد';
+                const mapLink = (m.lat && m.lng) ? `https://maps.google.com/?q=${m.lat},${m.lng}` : '#';
+                
+                return `
+                <div class="card">
+                    <div class="card-header">
+                        <span class="serial">${m.serial}</span>
+                        <span class="date"><i class="far fa-clock"></i> ${dateStr}</span>
+                    </div>
+                    ${m.lat && m.lng ? 
+                        `<a href="${mapLink}" target="_blank" class="btn btn-success"><i class="fas fa-map-marker-alt"></i> الذهاب إلى الموقع</a>` : 
+                        `<div class="alert alert-error" style="display:block;">لم يتم تسجيل إحداثيات لهذه الماكينة بعد.</div>`
+                    }
+                </div>
+                `;
+            }).join('');
+        }
+
+        function populateDropdowns() {
+            const options = allMachines.map(m => `<option value="${m.serial}">${m.serial}</option>`).join('');
+            
+            document.getElementById('save-serial').innerHTML = `<option value="">-- اختر الماكينة --</option>` + options;
+            document.getElementById('qr-serial').innerHTML = `<option value="">-- اختر الماكينة --</option>` + options;
+        }
+
+        // ================== التقاط الموقع ==================
+        function captureLocation() {
+            if (!navigator.geolocation) {
+                showAlert("متصفحك لا يدعم تحديد الموقع.", "error");
+                return;
+            }
+
+            showAlert("جاري تحديد موقعك...", "success");
+            
+            navigator.geolocation.getCurrentPosition(
+                (position) => {
+                    document.getElementById('save-lat').value = position.coords.latitude.toFixed(6);
+                    document.getElementById('save-lng').value = position.coords.longitude.toFixed(6);
+                    showAlert("تم التقاط الموقع بنجاح!", "success");
+                },
+                (error) => {
+                    showAlert("فشل في تحديد الموقع. تأكد من تشغيل الـ GPS والسماح للمتصفح.", "error");
+                },
+                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+            );
+        }
+
+        // ================== حفظ الموقع ==================
+        async function saveMovement() {
+            const sn = document.getElementById('save-serial').value;
+            const lat = document.getElementById('save-lat').value;
+            const lng = document.getElementById('save-lng').value;
+
+            if (!sn || !lat || !lng) {
+                showAlert("يرجى اختيار الماكينة والتقاط الموقع أولاً.", "error");
+                return;
+            }
+
+            showAlert("جاري حفظ الموقع...", "success");
+
+            try {
+                const url = `${API_URL}?token=${TOKEN}&action=save&sn=${sn}&lat=${lat}&lng=${lng}`;
+                const response = await fetch(url);
+                const data = await response.json();
+
+                if (data.ok) {
+                    showAlert("تم حفظ الموقع بنجاح!", "success");
+                    document.getElementById('save-lat').value = '';
+                    document.getElementById('save-lng').value = '';
+                    loadDashboard(); // تحديث اللوحة
+                    switchTab('dashboard', document.querySelector('.nav-item')); // العودة للوحة
+                } else {
+                    showAlert("خطأ في الحفظ: " + data.error, "error");
+                }
+            } catch (error) {
+                showAlert("فشل الاتصال بالخادم.", "error");
+            }
+        }
+
+        // ================== الباركود ==================
+        function generateQR() {
+            const sn = document.getElementById('qr-serial').value;
+            const container = document.getElementById('qrcode-container');
+            const qrDiv = document.getElementById('qrcode');
+            
+            if (!sn) {
+                container.style.display = 'none';
+                return;
+            }
+
+            qrDiv.innerHTML = '';
+            document.getElementById('qr-label').textContent = sn;
+            
+            // إنشاء الباركود يحتوي على رابط يفتح صفحة المسح (يمكنك تعديل الرابط لاحقاً ليفتح صفحة تسجيل تلقائي)
+            // هنا نضع الرابط الذي يفتح صفحة الواجهة مباشرة
+            const qrUrl = window.location.href.split('?')[0] + `?sn=${sn}`;
+            
+            qrCodeInstance = new QRCode(qrDiv, {
+                text: qrUrl,
+                width: 200,
+                height: 200,
+                colorDark : "#000000",
+                colorLight : "#ffffff",
+                correctLevel : QRCode.CorrectLevel.H
+            });
+
+            container.style.display = 'flex';
+        }
+
+        // ================== الإعدادات ==================
+        function saveUserName() {
+            const name = document.getElementById('user-name').value;
+            localStorage.setItem('tracker_user_name', name);
+            showAlert("تم حفظ الاسم.", "success");
+        }
+
+        // ================== بدء التشغيل ==================
+        document.addEventListener('DOMContentLoaded', () => {
+            // استرجاع اسم المستخدم
+            const savedName = localStorage.getItem('tracker_user_name');
+            if (savedName) document.getElementById('user-name').value = savedName;
+
+            // تحميل البيانات
+            loadDashboard();
+        });
+
+    </script>
 </body>
 </html>
