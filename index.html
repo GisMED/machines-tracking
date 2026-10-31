@@ -8,36 +8,32 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
-        :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --bg: #f4f7f6; --text: #333; --border: #ddd; }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+        :root { --primary: #007bff; --success: #28a745; --danger: #dc3545; --bg: #f4f7f6; --text: #333; --border: #ddd; }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, sans-serif; }
         body { background-color: var(--bg); color: var(--text); padding-bottom: 70px; }
-        header { background: var(--primary); color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        header { background: var(--primary); color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; position: sticky; top: 0; z-index: 100; }
         .container { padding: 15px; max-width: 600px; margin: auto; }
         .tab-content { display: none; }
-        .tab-content.active { display: block; animation: fadeIn 0.3s; }
-        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-        .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--border); }
+        .tab-content.active { display: block; }
+        .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .serial { font-weight: bold; font-size: 1.1rem; color: var(--primary); }
         .date { font-size: 0.8rem; color: #777; }
-        .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; text-align: center; text-decoration: none; margin-top: 10px; transition: 0.2s; }
+        .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; text-align: center; text-decoration: none; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
-        .btn-danger { background: var(--danger); color: white; }
         .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
-        .btn:active { transform: scale(0.98); }
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
         input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; }
-        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; border-top: 1px solid var(--border); z-index: 100; }
+        .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; border-top: 1px solid var(--border); z-index: 100; }
         .nav-item { flex: 1; text-align: center; padding: 12px 5px; color: #777; cursor: pointer; font-size: 0.8rem; }
         .nav-item i { font-size: 1.3rem; margin-bottom: 3px; display: block; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
-        #qrcode-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: white; border-radius: 10px; margin-top: 15px; }
-        #qrcode { margin: 15px 0; }
+        #qrcode-container { display: flex; flex-direction: column; align-items: center; padding: 20px; margin-top: 15px; display: none; }
         .alert { padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; text-align: center; }
-        .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
-        .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .alert-success { background: #d4edda; color: #155724; }
+        .alert-error { background: #f8d7da; color: #721c24; }
         .loading { text-align: center; padding: 20px; color: #777; }
     </style>
 </head>
@@ -46,7 +42,6 @@
     <header>📍 متتبع مواقع المكائن</header>
     <div class="container"><div id="alert" class="alert"></div></div>
 
-    <!-- 1. اللوحة -->
     <div id="tab-dashboard" class="tab-content active container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3>المواقع الحالية</h3>
@@ -55,49 +50,36 @@
         <div id="dashboard-list"><div class="loading">جاري تحميل البيانات...</div></div>
     </div>
 
-    <!-- 2. تسجيل نقل -->
     <div id="tab-save" class="tab-content container">
         <div class="card">
             <h3 style="margin-bottom: 15px;">تسجيل موقع جديد</h3>
             <div class="form-group">
-                <label>اختر الماكينة (Serial)</label>
+                <label>اختر الماكينة</label>
                 <select id="save-serial"><option value="">-- جاري التحميل --</option></select>
             </div>
             <div class="form-group">
-                <label>الموقع الحالي (GPS)</label>
+                <label>الموقع (GPS)</label>
                 <div style="display: flex; gap: 10px;">
                     <input type="text" id="save-lat" placeholder="Lat" readonly>
                     <input type="text" id="save-lng" placeholder="Lng" readonly>
                 </div>
-                <button onclick="captureLocation()" class="btn btn-outline" style="margin-top: 10px;"><i class="fas fa-map-marker-alt"></i> التقاط الموقع الحالي</button>
+                <button onclick="captureLocation()" class="btn btn-outline" style="margin-top: 10px;">التقاط الموقع</button>
             </div>
-            <button onclick="saveMovement()" class="btn btn-success" style="margin-top: 20px;"><i class="fas fa-save"></i> حفظ الموقع</button>
+            <button onclick="saveMovement()" class="btn btn-success">حفظ</button>
         </div>
     </div>
 
-    <!-- 3. الباركود -->
     <div id="tab-qr" class="tab-content container">
         <div class="card">
-            <h3 style="margin-bottom: 15px;">توليد باركود (QR)</h3>
+            <h3 style="margin-bottom: 15px;">الباركود</h3>
             <div class="form-group">
                 <label>اختر الماكينة</label>
                 <select id="qr-serial" onchange="generateQR()"><option value="">-- جاري التحميل --</option></select>
             </div>
-            <div id="qrcode-container" style="display: none;">
+            <div id="qrcode-container">
                 <div id="qrcode"></div>
                 <p style="font-weight: bold; margin-top: 10px;" id="qr-label"></p>
-                <button onclick="window.print()" class="btn btn-primary" style="margin-top: 15px;"><i class="fas fa-print"></i> طباعة</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 4. الإعدادات -->
-    <div id="tab-settings" class="tab-content container">
-        <div class="card">
-            <h3 style="margin-bottom: 15px;">معلومات الاتصال</h3>
-            <div class="form-group">
-                <label>اسمك</label>
-                <input type="text" id="user-name" placeholder="اكتب اسمك هنا...">
+                <button onclick="window.print()" class="btn btn-primary">طباعة</button>
             </div>
         </div>
     </div>
@@ -106,15 +88,12 @@
         <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fas fa-map-marked-alt"></i> اللوحة</div>
         <div class="nav-item" onclick="switchTab('save', this)"><i class="fas fa-edit"></i> تسجيل نقل</div>
         <div class="nav-item" onclick="switchTab('qr', this)"><i class="fas fa-qrcode"></i> باركود</div>
-        <div class="nav-item" onclick="switchTab('settings', this)"><i class="fas fa-cog"></i> الإعدادات</div>
     </nav>
 
     <script>
-        // ⚠️ ضع الرابط الخاص بك هنا (الذي ينتهي بـ /exec)
-        const API_URL = "https://script.google.com/macros/s/AKfycbxlcvniIVRKsl2vx3tLt6tHsKYXhO5-0YWiqifhZWfS95IFnI3vwx1uUzzFa3hPyiauWQ/exec";
+        // الرابط الخاص بك
+        const API_URL = "https://script.google.com/macros/s/AKfycbwVbfGzfbHjW4g0PJw8vPWZa6l0bfbFOCEuu6-eFPUcHwIqzW3migfBT4f7YEqqX_vYxg/exec";
         const TOKEN = "12346789";
-
-        let allMachines = []; 
 
         function switchTab(tabId, navElement) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
@@ -131,7 +110,7 @@
             setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
         }
 
-        // دالة مساعدة لتنفيذ طلبات JSONP
+        // دالة جلب البيانات (JSONP)
         function jsonpRequest(url, callback) {
             const callbackName = 'jsonp_' + Math.round(100000 * Math.random());
             const script = document.createElement('script');
@@ -146,88 +125,78 @@
             document.body.appendChild(script);
         }
 
-        // جلب البيانات (معدلة لاستخدام JSONP)
         function loadDashboard() {
-            const listContainer = document.getElementById('dashboard-list');
-            listContainer.innerHTML = '<div class="loading">جاري تحميل البيانات...</div>';
+            document.getElementById('dashboard-list').innerHTML = '<div class="loading">جاري التحميل...</div>';
             
             jsonpRequest(`${API_URL}?token=${TOKEN}&action=list`, function(data) {
                 if (data.ok) {
-                    allMachines = data.items;
-                    renderDashboard();
-                    populateDropdowns();
+                    renderDashboard(data.items);
+                    populateDropdowns(data.items);
                 } else {
-                    listContainer.innerHTML = `<div class="alert alert-error" style="display:block;">خطأ: ${data.error}</div>`;
+                    document.getElementById('dashboard-list').innerHTML = `<div class="alert alert-error" style="display:block;">خطأ: ${data.error}</div>`;
                 }
             });
         }
 
-        function renderDashboard() {
+        function renderDashboard(items) {
             const listContainer = document.getElementById('dashboard-list');
-            if (allMachines.length === 0) {
-                listContainer.innerHTML = '<p style="text-align:center;">لا توجد مكائن مسجلة.</p>';
+            if (items.length === 0) {
+                listContainer.innerHTML = '<p style="text-align:center;">لا توجد مكائن.</p>';
                 return;
             }
 
-            listContainer.innerHTML = allMachines.map(m => {
+            listContainer.innerHTML = items.map(m => {
                 const dateStr = m.updated_at ? new Date(m.updated_at).toLocaleString('ar-SA') : 'غير محدد';
                 const mapLink = (m.lat && m.lng) ? `https://maps.google.com/?q=${m.lat},${m.lng}` : '#';
                 return `
                 <div class="card">
                     <div class="card-header">
                         <span class="serial">${m.serial}</span>
-                        <span class="date"><i class="far fa-clock"></i> ${dateStr}</span>
+                        <span class="date">${dateStr}</span>
                     </div>
                     ${m.lat && m.lng ? 
-                        `<a href="${mapLink}" target="_blank" class="btn btn-success"><i class="fas fa-map-marker-alt"></i> الذهاب إلى الموقع</a>` : 
-                        `<div class="alert alert-error" style="display:block;">لم يتم تسجيل إحداثيات لهذه الماكينة بعد.</div>`
+                        `<a href="${mapLink}" target="_blank" class="btn btn-success">📍 عرض على الخريطة</a>` : 
+                        `<div class="alert alert-error" style="display:block;">لا يوجد موقع مسجل.</div>`
                     }
-                </div>
-                `;
+                </div>`;
             }).join('');
         }
 
-        function populateDropdowns() {
-            const options = allMachines.map(m => `<option value="${m.serial}">${m.serial}</option>`).join('');
-            document.getElementById('save-serial').innerHTML = `<option value="">-- اختر الماكينة --</option>` + options;
-            document.getElementById('qr-serial').innerHTML = `<option value="">-- اختر الماكينة --</option>` + options;
+        function populateDropdowns(items) {
+            const options = items.map(m => `<option value="${m.serial}">${m.serial}</option>`).join('');
+            document.getElementById('save-serial').innerHTML = `<option value="">-- اختر --</option>` + options;
+            document.getElementById('qr-serial').innerHTML = `<option value="">-- اختر --</option>` + options;
         }
 
         function captureLocation() {
-            if (!navigator.geolocation) { showAlert("متصفحك لا يدعم تحديد الموقع.", "error"); return; }
-            showAlert("جاري تحديد موقعك...", "success");
+            if (!navigator.geolocation) { showAlert("المتصفح لا يدعم الموقع.", "error"); return; }
+            showAlert("جاري تحديد الموقع...", "success");
             navigator.geolocation.getCurrentPosition(
-                (position) => {
-                    document.getElementById('save-lat').value = position.coords.latitude.toFixed(6);
-                    document.getElementById('save-lng').value = position.coords.longitude.toFixed(6);
-                    showAlert("تم التقاط الموقع بنجاح!", "success");
+                (pos) => {
+                    document.getElementById('save-lat').value = pos.coords.latitude.toFixed(6);
+                    document.getElementById('save-lng').value = pos.coords.longitude.toFixed(6);
+                    showAlert("تم التقاط الموقع!", "success");
                 },
-                (error) => { showAlert("فشل في تحديد الموقع. تأكد من تشغيل GPS.", "error"); },
-                { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+                (err) => { showAlert("فشل تحديد الموقع. تأكد من تشغيل GPS.", "error"); },
+                { enableHighAccuracy: true }
             );
         }
 
-        // حفظ الموقع (معدلة لاستخدام JSONP)
         function saveMovement() {
             const sn = document.getElementById('save-serial').value;
             const lat = document.getElementById('save-lat').value;
             const lng = document.getElementById('save-lng').value;
 
-            if (!sn || !lat || !lng) {
-                showAlert("يرجى اختيار الماكينة والتقاط الموقع أولاً.", "error");
-                return;
-            }
-            showAlert("جاري حفظ الموقع...", "success");
+            if (!sn || !lat || !lng) { showAlert("اختر الماكينة والتقط الموقع أولاً.", "error"); return; }
+            showAlert("جاري الحفظ...", "success");
 
             jsonpRequest(`${API_URL}?token=${TOKEN}&action=save&sn=${sn}&lat=${lat}&lng=${lng}`, function(data) {
                 if (data.ok) {
-                    showAlert("تم حفظ الموقع بنجاح!", "success");
-                    document.getElementById('save-lat').value = '';
-                    document.getElementById('save-lng').value = '';
-                    loadDashboard(); 
-                    switchTab('dashboard', document.querySelector('.nav-item')); 
+                    showAlert("تم الحفظ بنجاح!", "success");
+                    loadDashboard();
+                    switchTab('dashboard', document.querySelector('.nav-item'));
                 } else {
-                    showAlert("خطأ في الحفظ: " + data.error, "error");
+                    showAlert("خطأ: " + data.error, "error");
                 }
             });
         }
@@ -236,25 +205,15 @@
             const sn = document.getElementById('qr-serial').value;
             const container = document.getElementById('qrcode-container');
             const qrDiv = document.getElementById('qrcode');
-            
             if (!sn) { container.style.display = 'none'; return; }
+            
             qrDiv.innerHTML = '';
             document.getElementById('qr-label').textContent = sn;
-            
-            const qrUrl = window.location.href.split('?')[0] + `?sn=${sn}`;
-            
-            new QRCode(qrDiv, {
-                text: qrUrl,
-                width: 200, height: 200,
-                colorDark : "#000000", colorLight : "#ffffff",
-                correctLevel : QRCode.CorrectLevel.H
-            });
+            new QRCode(qrDiv, { text: window.location.href.split('?')[0] + `?sn=${sn}`, width: 200, height: 200 });
             container.style.display = 'flex';
         }
 
-        document.addEventListener('DOMContentLoaded', () => {
-            loadDashboard();
-        });
+        document.addEventListener('DOMContentLoaded', loadDashboard);
     </script>
 </body>
 </html>
