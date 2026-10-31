@@ -16,9 +16,8 @@
         .tab-content { display: none; }
         .tab-content.active { display: block; }
         .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; border: 1px solid var(--border); text-align: center; }
-        .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
-        .serial { font-weight: bold; font-size: 1.1rem; color: var(--primary); }
-        .date { font-size: 0.8rem; color: #777; }
+        .card-header { display: flex; justify-content: center; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+        .serial { font-weight: bold; font-size: 1.3rem; color: var(--primary); }
         .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; text-align: center; text-decoration: none; margin-top: 10px; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
@@ -38,7 +37,7 @@
         
         /* شاشة المسح التلقائي */
         #scan-mode { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; z-index: 999; padding-top: 50px; }
-        #scan-mode h2 { color: var(--primary); margin-bottom: 20px; }
+        #scan-mode h2 { color: var(--primary); margin-bottom: 20px; text-align: center; }
         .spinner { border: 4px solid #f3f3f3; border-top: 4px solid var(--primary); border-radius: 50%; width: 40px; height: 40px; animation: spin 1s linear infinite; margin: 20px auto; }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
     </style>
@@ -51,7 +50,7 @@
             <h2 id="scan-title">جاري تحديد الموقع...</h2>
             <div id="scan-spinner" class="spinner"></div>
             <div id="scan-result" style="display: none;">
-                <div class="alert alert-success" style="display: block; font-size: 1.2rem;">
+                <div class="alert alert-success" style="display: block; font-size: 1.2rem; text-align: center;">
                     <i class="fas fa-check-circle"></i> تم تسجيل الموقع بنجاح!
                 </div>
                 <a href="#" id="scan-map-link" target="_blank" class="btn btn-success" style="font-size: 1.2rem; padding: 15px;">
@@ -129,17 +128,14 @@
             const scannedSerial = urlParams.get('sn');
 
             if (scannedSerial) {
-                // تفعيل وضع المسح التلقائي
                 document.getElementById('main-app').style.display = 'none';
                 document.getElementById('scan-mode').style.display = 'block';
                 startAutoScan(scannedSerial);
             } else {
-                // الوضع العادي (لوحة التحكم)
                 loadDashboard();
             }
         });
 
-        // دالة المسح التلقائي
         function startAutoScan(sn) {
             document.getElementById('scan-title').innerText = `جاري تحديد موقع الماكينة: ${sn}`;
 
@@ -150,7 +146,6 @@
 
             navigator.geolocation.getCurrentPosition(
                 (pos) => {
-                    // تم التقاط الموقع، الآن نحفظه في جوجل شيت
                     const lat = pos.coords.latitude.toFixed(6);
                     const lng = pos.coords.longitude.toFixed(6);
                     
@@ -158,7 +153,6 @@
 
                     jsonpRequest(`${API_URL}?token=${TOKEN}&action=save&sn=${sn}&lat=${lat}&lng=${lng}`, function(data) {
                         if (data.ok) {
-                            // نجاح
                             document.getElementById('scan-title').innerText = `تم تسجيل الموقع!`;
                             document.getElementById('scan-spinner').style.display = 'none';
                             document.getElementById('scan-result').style.display = 'block';
@@ -239,13 +233,12 @@
             }
 
             listContainer.innerHTML = items.map(m => {
-                const dateStr = m.updated_at ? new Date(m.updated_at).toLocaleString('ar-SA') : 'غير محدد';
+                // تم حذف متغير التاريخ من هنا
                 const mapLink = (m.lat && m.lng) ? `https://maps.google.com/?q=${m.lat},${m.lng}` : '#';
                 return `
                 <div class="card">
                     <div class="card-header">
                         <span class="serial">${m.serial}</span>
-                        <span class="date">${dateStr}</span>
                     </div>
                     ${m.lat && m.lng ? 
                         `<a href="${mapLink}" target="_blank" class="btn btn-success">📍 عرض على الخريطة</a>` : 
@@ -303,7 +296,6 @@
             qrDiv.innerHTML = '';
             document.getElementById('qr-label').textContent = sn;
             
-            // ✨ هذا هو السحر: الرابط الآن يحمل رقم الماكينة ليقوم بتشغيل المسح التلقائي
             const qrUrl = window.location.href.split('?')[0] + `?sn=${sn}`;
             
             new QRCode(qrDiv, { text: qrUrl, width: 200, height: 200 });
