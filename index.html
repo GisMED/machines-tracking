@@ -4,194 +4,125 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>متتبع المكائن</title>
-    <!-- مكتبة الأيقونات -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <!-- مكتبة توليد الباركود -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
     
     <style>
-        :root {
-            --primary: #007bff;
-            --success: #28a745;
-            --warning: #ffc107;
-            --danger: #dc3545;
-            --bg: #f4f7f6;
-            --text: #333;
-            --border: #ddd;
-        }
+        :root { --primary: #007bff; --success: #28a745; --warning: #ffc107; --danger: #dc3545; --bg: #f4f7f6; --text: #333; --border: #ddd; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
         body { background-color: var(--bg); color: var(--text); padding-bottom: 70px; }
-        
-        /* الشريط العلوي */
         header { background: var(--primary); color: white; padding: 15px; text-align: center; font-size: 1.2rem; font-weight: bold; position: sticky; top: 0; z-index: 100; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
-        
-        /* الحاويات */
         .container { padding: 15px; max-width: 600px; margin: auto; }
         .tab-content { display: none; }
         .tab-content.active { display: block; animation: fadeIn 0.3s; }
         @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-
-        /* البطاقات */
         .card { background: white; border-radius: 10px; padding: 15px; margin-bottom: 15px; box-shadow: 0 2px 8px rgba(0,0,0,0.05); border: 1px solid var(--border); }
         .card-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
         .serial { font-weight: bold; font-size: 1.1rem; color: var(--primary); }
         .date { font-size: 0.8rem; color: #777; }
-        
-        /* الأزرار */
         .btn { display: block; width: 100%; padding: 12px; border: none; border-radius: 8px; font-size: 1rem; cursor: pointer; text-align: center; text-decoration: none; margin-top: 10px; transition: 0.2s; }
         .btn-primary { background: var(--primary); color: white; }
         .btn-success { background: var(--success); color: white; }
         .btn-danger { background: var(--danger); color: white; }
         .btn-outline { background: transparent; border: 1px solid var(--primary); color: var(--primary); }
         .btn:active { transform: scale(0.98); }
-
-        /* النماذج */
         .form-group { margin-bottom: 15px; }
         label { display: block; margin-bottom: 5px; font-weight: bold; font-size: 0.9rem; }
         input, select { width: 100%; padding: 10px; border: 1px solid var(--border); border-radius: 8px; font-size: 1rem; }
-        
-        /* شريط التبويبات السفلي */
         .bottom-nav { position: fixed; bottom: 0; left: 0; right: 0; background: white; display: flex; justify-content: space-around; border-top: 1px solid var(--border); z-index: 100; }
         .nav-item { flex: 1; text-align: center; padding: 12px 5px; color: #777; cursor: pointer; font-size: 0.8rem; }
         .nav-item i { font-size: 1.3rem; margin-bottom: 3px; display: block; }
         .nav-item.active { color: var(--primary); font-weight: bold; }
-
-        /* الباركود */
         #qrcode-container { display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 20px; background: white; border-radius: 10px; margin-top: 15px; }
         #qrcode { margin: 15px 0; }
-        
-        /* رسائل التنبيه */
         .alert { padding: 10px; border-radius: 8px; margin-bottom: 15px; display: none; text-align: center; }
         .alert-success { background: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
         .alert-error { background: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
-        
         .loading { text-align: center; padding: 20px; color: #777; }
     </style>
 </head>
 <body>
 
     <header>📍 متتبع مواقع المكائن</header>
+    <div class="container"><div id="alert" class="alert"></div></div>
 
-    <!-- رسائل التنبيه -->
-    <div class="container">
-        <div id="alert" class="alert"></div>
-    </div>
-
-    <!-- ================== 1. تبويب اللوحة ================== -->
+    <!-- 1. اللوحة -->
     <div id="tab-dashboard" class="tab-content active container">
         <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
             <h3>المواقع الحالية</h3>
-            <button onclick="loadDashboard()" class="btn btn-outline" style="width: auto; padding: 8px 15px; margin: 0;">
-                <i class="fas fa-sync-alt"></i> تحديث
-            </button>
+            <button onclick="loadDashboard()" class="btn btn-outline" style="width: auto; padding: 8px 15px; margin: 0;"><i class="fas fa-sync-alt"></i> تحديث</button>
         </div>
-        <div id="dashboard-list">
-            <div class="loading">جاري تحميل البيانات...</div>
-        </div>
+        <div id="dashboard-list"><div class="loading">جاري تحميل البيانات...</div></div>
     </div>
 
-    <!-- ================== 2. تبويب تسجيل نقل ================== -->
+    <!-- 2. تسجيل نقل -->
     <div id="tab-save" class="tab-content container">
         <div class="card">
             <h3 style="margin-bottom: 15px;">تسجيل موقع جديد</h3>
-            
             <div class="form-group">
                 <label>اختر الماكينة (Serial)</label>
-                <select id="save-serial">
-                    <option value="">-- جاري التحميل --</option>
-                </select>
+                <select id="save-serial"><option value="">-- جاري التحميل --</option></select>
             </div>
-
             <div class="form-group">
                 <label>الموقع الحالي (GPS)</label>
                 <div style="display: flex; gap: 10px;">
-                    <input type="text" id="save-lat" placeholder="خط العرض (Lat)" readonly>
-                    <input type="text" id="save-lng" placeholder="خط الطول (Lng)" readonly>
+                    <input type="text" id="save-lat" placeholder="Lat" readonly>
+                    <input type="text" id="save-lng" placeholder="Lng" readonly>
                 </div>
-                <button onclick="captureLocation()" class="btn btn-outline" style="margin-top: 10px;">
-                    <i class="fas fa-map-marker-alt"></i> التقاط الموقع الحالي
-                </button>
+                <button onclick="captureLocation()" class="btn btn-outline" style="margin-top: 10px;"><i class="fas fa-map-marker-alt"></i> التقاط الموقع الحالي</button>
             </div>
-
-            <button onclick="saveMovement()" class="btn btn-success" style="margin-top: 20px;">
-                <i class="fas fa-save"></i> حفظ الموقع
-            </button>
+            <button onclick="saveMovement()" class="btn btn-success" style="margin-top: 20px;"><i class="fas fa-save"></i> حفظ الموقع</button>
         </div>
     </div>
 
-    <!-- ================== 3. تبويب الباركود ================== -->
+    <!-- 3. الباركود -->
     <div id="tab-qr" class="tab-content container">
         <div class="card">
             <h3 style="margin-bottom: 15px;">توليد باركود (QR)</h3>
             <div class="form-group">
                 <label>اختر الماكينة</label>
-                <select id="qr-serial" onchange="generateQR()">
-                    <option value="">-- جاري التحميل --</option>
-                </select>
+                <select id="qr-serial" onchange="generateQR()"><option value="">-- جاري التحميل --</option></select>
             </div>
-            
             <div id="qrcode-container" style="display: none;">
                 <div id="qrcode"></div>
                 <p style="font-weight: bold; margin-top: 10px;" id="qr-label"></p>
-                <button onclick="window.print()" class="btn btn-primary" style="margin-top: 15px;">
-                    <i class="fas fa-print"></i> طباعة الباركود
-                </button>
+                <button onclick="window.print()" class="btn btn-primary" style="margin-top: 15px;"><i class="fas fa-print"></i> طباعة</button>
             </div>
         </div>
     </div>
 
-    <!-- ================== 4. تبويب الإعدادات ================== -->
+    <!-- 4. الإعدادات -->
     <div id="tab-settings" class="tab-content container">
         <div class="card">
             <h3 style="margin-bottom: 15px;">معلومات الاتصال</h3>
-            <p style="font-size: 0.9rem; color: #555; margin-bottom: 15px;">
-                النظام متصل بقاعدة بيانات Google Sheets. أي تحديث هنا يظهر مباشرة للجميع.
-            </p>
             <div class="form-group">
-                <label>اسمك (يظهر في سجل التحديثات)</label>
-                <input type="text" id="user-name" placeholder="اكتب اسمك هنا..." onchange="saveUserName()">
+                <label>اسمك</label>
+                <input type="text" id="user-name" placeholder="اكتب اسمك هنا...">
             </div>
         </div>
     </div>
 
-    <!-- شريط التبويبات السفلي -->
     <nav class="bottom-nav">
-        <div class="nav-item active" onclick="switchTab('dashboard', this)">
-            <i class="fas fa-map-marked-alt"></i>
-            اللوحة
-        </div>
-        <div class="nav-item" onclick="switchTab('save', this)">
-            <i class="fas fa-edit"></i>
-            تسجيل نقل
-        </div>
-        <div class="nav-item" onclick="switchTab('qr', this)">
-            <i class="fas fa-qrcode"></i>
-            باركود
-        </div>
-        <div class="nav-item" onclick="switchTab('settings', this)">
-            <i class="fas fa-cog"></i>
-            الإعدادات
-        </div>
+        <div class="nav-item active" onclick="switchTab('dashboard', this)"><i class="fas fa-map-marked-alt"></i> اللوحة</div>
+        <div class="nav-item" onclick="switchTab('save', this)"><i class="fas fa-edit"></i> تسجيل نقل</div>
+        <div class="nav-item" onclick="switchTab('qr', this)"><i class="fas fa-qrcode"></i> باركود</div>
+        <div class="nav-item" onclick="switchTab('settings', this)"><i class="fas fa-cog"></i> الإعدادات</div>
     </nav>
 
     <script>
-        // ⚠️ الرابط الخاص بك وكلمة السر
+        // ⚠️ ضع الرابط الخاص بك هنا (الذي ينتهي بـ /exec)
         const API_URL = "https://script.google.com/macros/s/AKfycbxlcvniIVRKsl2vx3tLt6tHsKYXhO5-0YWiqifhZWfS95IFnI3vwx1uUzzFa3hPyiauWQ/exec";
         const TOKEN = "12346789";
 
-        let allMachines = []; // لتخزين البيانات مؤقتاً
-        let qrCodeInstance = null;
+        let allMachines = []; 
 
-        // ================== التبويبات ==================
         function switchTab(tabId, navElement) {
             document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
             document.querySelectorAll('.nav-item').forEach(nav => nav.classList.remove('active'));
-            
             document.getElementById('tab-' + tabId).classList.add('active');
             navElement.classList.add('active');
         }
 
-        // ================== التنبيهات ==================
         function showAlert(msg, type = 'success') {
             const alertBox = document.getElementById('alert');
             alertBox.textContent = msg;
@@ -200,15 +131,27 @@
             setTimeout(() => { alertBox.style.display = 'none'; }, 3000);
         }
 
-        // ================== تحميل البيانات ==================
-        async function loadDashboard() {
+        // دالة مساعدة لتنفيذ طلبات JSONP
+        function jsonpRequest(url, callback) {
+            const callbackName = 'jsonp_' + Math.round(100000 * Math.random());
+            const script = document.createElement('script');
+            
+            window[callbackName] = function(data) {
+                callback(data);
+                delete window[callbackName];
+                document.body.removeChild(script);
+            };
+            
+            script.src = url + '&callback=' + callbackName;
+            document.body.appendChild(script);
+        }
+
+        // جلب البيانات (معدلة لاستخدام JSONP)
+        function loadDashboard() {
             const listContainer = document.getElementById('dashboard-list');
             listContainer.innerHTML = '<div class="loading">جاري تحميل البيانات...</div>';
             
-            try {
-                const response = await fetch(`${API_URL}?token=${TOKEN}&action=list`);
-                const data = await response.json();
-
+            jsonpRequest(`${API_URL}?token=${TOKEN}&action=list`, function(data) {
                 if (data.ok) {
                     allMachines = data.items;
                     renderDashboard();
@@ -216,9 +159,7 @@
                 } else {
                     listContainer.innerHTML = `<div class="alert alert-error" style="display:block;">خطأ: ${data.error}</div>`;
                 }
-            } catch (error) {
-                listContainer.innerHTML = `<div class="alert alert-error" style="display:block;">فشل الاتصال بالخادم. تحقق من الإنترنت.</div>`;
-            }
+            });
         }
 
         function renderDashboard() {
@@ -231,7 +172,6 @@
             listContainer.innerHTML = allMachines.map(m => {
                 const dateStr = m.updated_at ? new Date(m.updated_at).toLocaleString('ar-SA') : 'غير محدد';
                 const mapLink = (m.lat && m.lng) ? `https://maps.google.com/?q=${m.lat},${m.lng}` : '#';
-                
                 return `
                 <div class="card">
                     <div class="card-header">
@@ -249,35 +189,26 @@
 
         function populateDropdowns() {
             const options = allMachines.map(m => `<option value="${m.serial}">${m.serial}</option>`).join('');
-            
             document.getElementById('save-serial').innerHTML = `<option value="">-- اختر الماكينة --</option>` + options;
             document.getElementById('qr-serial').innerHTML = `<option value="">-- اختر الماكينة --</option>` + options;
         }
 
-        // ================== التقاط الموقع ==================
         function captureLocation() {
-            if (!navigator.geolocation) {
-                showAlert("متصفحك لا يدعم تحديد الموقع.", "error");
-                return;
-            }
-
+            if (!navigator.geolocation) { showAlert("متصفحك لا يدعم تحديد الموقع.", "error"); return; }
             showAlert("جاري تحديد موقعك...", "success");
-            
             navigator.geolocation.getCurrentPosition(
                 (position) => {
                     document.getElementById('save-lat').value = position.coords.latitude.toFixed(6);
                     document.getElementById('save-lng').value = position.coords.longitude.toFixed(6);
                     showAlert("تم التقاط الموقع بنجاح!", "success");
                 },
-                (error) => {
-                    showAlert("فشل في تحديد الموقع. تأكد من تشغيل الـ GPS والسماح للمتصفح.", "error");
-                },
+                (error) => { showAlert("فشل في تحديد الموقع. تأكد من تشغيل GPS.", "error"); },
                 { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
             );
         }
 
-        // ================== حفظ الموقع ==================
-        async function saveMovement() {
+        // حفظ الموقع (معدلة لاستخدام JSONP)
+        function saveMovement() {
             const sn = document.getElementById('save-serial').value;
             const lat = document.getElementById('save-lat').value;
             const lng = document.getElementById('save-lng').value;
@@ -286,75 +217,44 @@
                 showAlert("يرجى اختيار الماكينة والتقاط الموقع أولاً.", "error");
                 return;
             }
-
             showAlert("جاري حفظ الموقع...", "success");
 
-            try {
-                const url = `${API_URL}?token=${TOKEN}&action=save&sn=${sn}&lat=${lat}&lng=${lng}`;
-                const response = await fetch(url);
-                const data = await response.json();
-
+            jsonpRequest(`${API_URL}?token=${TOKEN}&action=save&sn=${sn}&lat=${lat}&lng=${lng}`, function(data) {
                 if (data.ok) {
                     showAlert("تم حفظ الموقع بنجاح!", "success");
                     document.getElementById('save-lat').value = '';
                     document.getElementById('save-lng').value = '';
-                    loadDashboard(); // تحديث اللوحة
-                    switchTab('dashboard', document.querySelector('.nav-item')); // العودة للوحة
+                    loadDashboard(); 
+                    switchTab('dashboard', document.querySelector('.nav-item')); 
                 } else {
                     showAlert("خطأ في الحفظ: " + data.error, "error");
                 }
-            } catch (error) {
-                showAlert("فشل الاتصال بالخادم.", "error");
-            }
+            });
         }
 
-        // ================== الباركود ==================
         function generateQR() {
             const sn = document.getElementById('qr-serial').value;
             const container = document.getElementById('qrcode-container');
             const qrDiv = document.getElementById('qrcode');
             
-            if (!sn) {
-                container.style.display = 'none';
-                return;
-            }
-
+            if (!sn) { container.style.display = 'none'; return; }
             qrDiv.innerHTML = '';
             document.getElementById('qr-label').textContent = sn;
             
-            // إنشاء الباركود يحتوي على رابط يفتح صفحة المسح (يمكنك تعديل الرابط لاحقاً ليفتح صفحة تسجيل تلقائي)
-            // هنا نضع الرابط الذي يفتح صفحة الواجهة مباشرة
             const qrUrl = window.location.href.split('?')[0] + `?sn=${sn}`;
             
-            qrCodeInstance = new QRCode(qrDiv, {
+            new QRCode(qrDiv, {
                 text: qrUrl,
-                width: 200,
-                height: 200,
-                colorDark : "#000000",
-                colorLight : "#ffffff",
+                width: 200, height: 200,
+                colorDark : "#000000", colorLight : "#ffffff",
                 correctLevel : QRCode.CorrectLevel.H
             });
-
             container.style.display = 'flex';
         }
 
-        // ================== الإعدادات ==================
-        function saveUserName() {
-            const name = document.getElementById('user-name').value;
-            localStorage.setItem('tracker_user_name', name);
-            showAlert("تم حفظ الاسم.", "success");
-        }
-
-        // ================== بدء التشغيل ==================
         document.addEventListener('DOMContentLoaded', () => {
-            // استرجاع اسم المستخدم
-            const savedName = localStorage.getItem('tracker_user_name');
-            if (savedName) document.getElementById('user-name').value = savedName;
-
-            // تحميل البيانات
             loadDashboard();
         });
-
     </script>
 </body>
 </html>
